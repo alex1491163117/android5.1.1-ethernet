@@ -1,24 +1,20 @@
-#android5.1.1 add ethernet
-
-[原文地址](https://blog.csdn.net/hclydao/article/details/50972932)
-
 android5.0以上的系统自带了ethernet service，默认开机就会启动，同时使用ip获取方式是动态分配，这里记录下android5.1增加ethernet设置界面设置ip获取方式及开关.
 
 首先是界面方面要修改Settings增加ethernet设置界面
 
 修改文件packages/apps/Settings/res/xml/dashboard_categories.xml在蓝牙后面加上如下代码
-```java
+
 		<!-- ethernet add by hclydao-->
 		<dashboard-tile
 		    android:id="@+id/ethernet_settings"
 		    android:icon="@drawable/ic_settings_dock"
 		    android:fragment="com.android.settings.ethernet.EthernetSettings"
 		    android:title="@string/ethernet_settings" />
-```
+
 其中的EthernetSettings后面进行说明，然后增加string修改文件packages/apps/Settings/res/values/strings.xml
 
 增加如下内容
-```java
+
     <!-- Eth settings title add by hclydao-->
     <string name="ethernet_settings">Ethernet</string>
     <!-- Ethernet configuration dialog add by hcldyao-->
@@ -42,39 +38,34 @@ android5.0以上的系统自带了ethernet service，默认开机就会启动，
 	<string name="eth_settings_empty">can\'t be empty</string>
     <!-- Label for the network prefix of the network [CHAR LIMIT=25]-->
     <string name="eth_network_prefix_length">Network prefix length</string>
-```
+
 这是我修改完成后所要加的所有的string
 
 接着修改文件packages/apps/Settings/src/com/android/settings/SettingsActivity.java增加
-```java
+
 import com.android.settings.ethernet.EthernetSettings;//add by hclydao
-```
+
 然后在R.id.bluetooth_settings,后增加
-```java
+
 R.id.ethernet_settings,//add by hclydao
-```
+
 在BluetoothSettings.class.getName(),后增加
-```java
+
 EthernetSettings.class.getName(),//add by hclydao
-```
+
 接着修改文件packages/apps/Settings/src/com/android/settings/Settings.java
 
-在
-```java
-public static class WirelessSettingsActivity extends SettingsActivity { /* empty */ }
-```
-后增加
-```java
+在public static class WirelessSettingsActivity extends SettingsActivity { /* empty */ }后增加
+
 public static class EthernetSettingsActivity extends SettingsActivity { /* empty */ } //add by hclydao
-```
+
 这里面应该是声明与继承关系
 
 接着修改
-```java
+
 packages/apps/Settings/AndroidManifest.xml
-```
+
 增加
-```java
 
         <activity android:name="Settings$EthernetSettingsActivity"
                 android:label="@string/ethernet_settings"
@@ -94,15 +85,15 @@ packages/apps/Settings/AndroidManifest.xml
             <meta-data android:name="com.android.settings.PRIMARY_PROFILE_CONTROLLED"
                 android:value="true" />
         </activity>
-```
+
 这三个文件按照wifi的代码改就行了。
 
 然后增加点击进去后的布局文件,增加
-```java
+
 packages/apps/Settings/res/xml/ethernet_settings.xml
-```
+
 内容如下
-```java
+
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (C) 2010 The Android Open Source Project
 
@@ -128,7 +119,7 @@ packages/apps/Settings/res/xml/ethernet_settings.xml
             android:key="ETHERNET_CONFIG"
             android:persistent="false" />
 </PreferenceScreen>
-```
+
 然后增加了packages/apps/Settings/src/com/android/settings/ethernet/EthernetSettings.java
 
 这是我最终的代码，这里就不贴上来了，下面我会给下载地址
@@ -137,7 +128,7 @@ packages/apps/Settings/res/xml/ethernet_settings.xml
 1.png
 
 点击进去后会有一个Dialog布局，需要增加文件packages/apps/Settings/res/layout/eth_configure.xml
-```java
+
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
@@ -250,7 +241,7 @@ packages/apps/Settings/res/xml/ethernet_settings.xml
     </LinearLayout>
 
 </ScrollView>
-```
+
 里面包括了dhcp与static ip的选择，以及static ip的设置
 
 然后增加Settings/src/com/android/settings/ethernet/EthernetDialog.java
@@ -270,25 +261,18 @@ packages/apps/Settings/res/xml/ethernet_settings.xml
 修改文件frameworks/base/core/java/android/provider/Settings.java
 
 在Settings数据库中增加一个ethernet的控制
-```java
+
 public static final String ETHERNET_ON = "ethernet_on";//add by hclydao
-```
+
 增加这个以后需要更新api才能编译过,增加这个后在ethernet-service和Settings中ethernet中进行读写操作
 修改frameworks/opt/net/ethernet/java/com/android/server/ethernet/EthernetServiceImpl.java文件
-在
-```java
-mHandler = new Handler(handlerThread.getLooper());
-```
-后增加如下代码
-```java
+在mHandler = new Handler(handlerThread.getLooper());后增加如下代码
 		int enable = Settings.Global.getInt(mContext.getContentResolver(),Settings.Global.ETHERNET_ON,0);//add by hclydao
 		if(enable != EthernetManager.ETH_STATE_ENABLED) {
 			Log.i(TAG, "Ethernet is not enable");
 			return;
 		}
-```
 如果没有打开就直接返回，不启动Service后继的操作,然后增加两个接口
-```java
 	class TstartThread extends Thread {
 		public void run() {
 			Looper.prepare();
@@ -314,9 +298,7 @@ mHandler = new Handler(handlerThread.getLooper());
 		});
 		tstopthread.start();
 	}
-```
 同时要修改frameworks/base/core/java/android/net/EthernetManager.java文件增加
-```java
     public static final int ETH_STATE_UNKNOWN = 0;
     public static final int ETH_STATE_DISABLED = 1;
     public static final int ETH_STATE_ENABLED = 2;
@@ -334,62 +316,39 @@ mHandler = new Handler(handlerThread.getLooper());
         } catch (NullPointerException | RemoteException e) {
         }
     }
-```
 同时修改frameworks/base/core/java/android/net/IEthernetManager.aidl
 增加
-```java
 	void Trackstart();//add by hclydao
 	void Trackstop();
-```
 提供给设置进行状态控制,这里基本功能就实现了。
 跟踪测试时发现静态ip设置的时候有时候不成功，修改文件frameworks/opt/net/ethernet/java/com/android/server/ethernet/EthernetNetworkFactory.java
 增加
-```java
 private Handler mHandler;
-```
 然后在
-```java
 mContext = context;
-```
 后增加
-```java
 mHandler = target;//add by hclydao
-```
-在
-```java
-if (!setStaticIpAddress(config.getStaticIpConfiguration())) {
-```
-后增加
-```java
+在if (!setStaticIpAddress(config.getStaticIpConfiguration())) {后增加
 						//if error then stop and restart add by hclydao
 						if((mContext != null) && (mHandler != null)) {
 							Log.d(TAG, "Setting static ip failed now restart");
 							stop();
 							start(mContext,mHandler);
 						}
-```
 如果设置失败，stop后重新start
-然后在
-```java
-if (mNMService.getInterfaceConfig(iface).hasFlag("running")) {
-```
-前面增加
-```java
+然后在if (mNMService.getInterfaceConfig(iface).hasFlag("running")) {前面增加
 						if(!iface.equals("eth0"))//add by hclydao make sure the interface is eth0
 							continue;
-```
 这里只设置了一个设备名，为保存是eth0所以加上这句,防止意外.
+
 
 最后来增加Systemui statusbar中的状态提示,这里只增加了两种状态，一种是连接成功，一种是连接不成功，简单点来
 修改frameworks/base/packages/SystemUI/res/layout/signal_cluster_view.xml
 在
-```java
      <View
          android:id="@+id/wifi_signal_spacer"
          android:layout_width="4dp"
-```
 前增加
-```java
      </FrameLayout>
 	<!--add by hclyado for ethernet-->
 	<FrameLayout
@@ -407,32 +366,23 @@ if (mNMService.getInterfaceConfig(iface).hasFlag("running")) {
 	        android:scaleType="center"
 	        />
 	</FrameLayout>
-```
 修改文件frameworks/base/packages/SystemUI/res/values/strings.xml
 增加
-```java
     <!-- Content description of the Ethernet connected icon for accessibility (not shown on the screen). [CHAR LIMIT=NONE] add by hclydao-->
     <string name="accessibility_ethernet_connected">Ethernet connected.</string>
     <string name="accessibility_ethernet_disconnected">Ethernet disconnected.</string>
     <string name="accessibility_ethernet_connecting">Ethernet connecting.</string>
-```
+
 修改文件
 frameworks/base/packages/SystemUI/src/com/android/systemui/statusbar/policy/NetworkControllerImpl.java
 增加
-```java
 import android.net.EthernetManager;
-```
 在mWifiSignalController.notifyListeners();前面加上
-```java
 cluster.setEthernetIndicators(false,R.drawable.ethernet_disconnected,R.string.accessibility_ethernet_disconnected);
-```
 在pushConnectivityToSignals函数中的
-```java
          mWifiSignalController.setInetCondition(
                  mValidatedTransports.get(mWifiSignalController.getTransportType()) ? 1 : 0);
-```
 后面增加
-```java
 //add by hclydao
         int length = mSignalClusters.size();
 		int ethicon = R.drawable.ethernet_connecting;
@@ -445,47 +395,32 @@ cluster.setEthernetIndicators(false,R.drawable.ethernet_disconnected,R.string.ac
             mSignalClusters.get(i).setEthernetIndicators(mEthernetConnected, ethicon,ethacc);
         }
 //end add
-```
 在
-```java
 void setIsAirplaneMode(boolean is, int airplaneIcon, int contentDescription);
-```
 后增加
-```java
 public void setEthernetIndicators(boolean visible, int stateIcon, int contentDescription);
-```
+
 修改文件frameworks/base/packages/SystemUI/src/com/android/systemui/statusbar/SignalClusterView.java
 增加
-```java
     private boolean mEthernetVisible = false;//add by hclydao
     private int mEthernetStateId = 0;
 	private int mEthernetDescription;
     ViewGroup mWifiGroup,mEthernetGroup;//modify by hclydao
     ImageView mVpn, mWifi, mAirplane, mNoSims,mEthernet;//modify by hclydao
-```
 在
-```java
          mWifiAirplaneSpacer =         findViewById(R.id.wifi_airplane_spacer);
          mWifiSignalSpacer =           findViewById(R.id.wifi_signal_spacer);
          mMobileSignalGroup = (LinearLayout) findViewById(R.id.mobile_signal_group);
-```
 后增加
-```java
         mEthernetGroup  = (ViewGroup) findViewById(R.id.ethernet_combo);//add by hclydao
         mEthernet       = (ImageView) findViewById(R.id.ethernet_state);
-```
 在
-```java
          mWifi           = null;
          mAirplane       = null;
-```
 后增加
-```java
         mEthernetGroup  = null;//add by hclydao
         mEthernet	    = null;
-```
 增加函数
-```java
 	//add by hclydao
 	@Override
     public void setEthernetIndicators(boolean visible, int stateIcon, int contentDescription) {
@@ -495,14 +430,10 @@ public void setEthernetIndicators(boolean visible, int stateIcon, int contentDes
 
         apply();
     }
-```
 在apply函数中
-```java
              mWifiSignalSpacer.setVisibility(View.GONE);
          }
-```
 后增加
-```java
         if (mEthernetVisible && !mWifiVisible) {//add by hclydao
             mEthernetGroup.setVisibility(View.VISIBLE);
             mEthernet.setImageResource(mEthernetStateId);
@@ -510,12 +441,30 @@ public void setEthernetIndicators(boolean visible, int stateIcon, int contentDes
         } else {
             mEthernetGroup.setVisibility(View.GONE);
         }
-```
-在
-```java
-boolean anythingVisible = mNoSimsVisible || mWifiVisible || mIsAirplaneMode
-```
-上增加
-```java
+在boolean anythingVisible = mNoSimsVisible || mWifiVisible || mIsAirplaneMode上增加
 || mEthernetVisible
-```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
