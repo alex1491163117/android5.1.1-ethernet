@@ -520,6 +520,5 @@ boolean anythingVisible = mNoSimsVisible || mWifiVisible || mIsAirplaneMode
 || mEthernetVisible
 ```
 
-如果觉得有帮助，可以稍微打赏
 
 ![打赏](https://github.com/hcly/pics/blob/master/zhifu.png)
