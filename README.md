@@ -519,3 +519,7 @@ boolean anythingVisible = mNoSimsVisible || mWifiVisible || mIsAirplaneMode
 ```java
 || mEthernetVisible
 ```
+
+如果觉得有帮助，可以稍微打赏
+
+![微信支付](https://github.com/hcly/pics/blob/master/weixin.png)
